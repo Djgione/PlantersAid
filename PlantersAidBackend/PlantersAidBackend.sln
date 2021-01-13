@@ -3,25 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30907.101
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Authorization", "PlantersAidBackend\Authorization.csproj", "{1B9645BB-415B-4BB7-BFF0-A105341BB540}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Authentication", "Authentication\Authentication.csproj", "{F808CE98-3261-41CC-B45E-452CF3642190}"
-EndProject
 Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{1B9645BB-415B-4BB7-BFF0-A105341BB540}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1B9645BB-415B-4BB7-BFF0-A105341BB540}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1B9645BB-415B-4BB7-BFF0-A105341BB540}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1B9645BB-415B-4BB7-BFF0-A105341BB540}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F808CE98-3261-41CC-B45E-452CF3642190}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F808CE98-3261-41CC-B45E-452CF3642190}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F808CE98-3261-41CC-B45E-452CF3642190}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F808CE98-3261-41CC-B45E-452CF3642190}.Release|Any CPU.Build.0 = Release|Any CPU
-	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
