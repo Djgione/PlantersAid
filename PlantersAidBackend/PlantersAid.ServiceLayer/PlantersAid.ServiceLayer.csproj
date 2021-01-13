@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="PlantersAid.ServiceLayer.Authentication\**" />
+    <Compile Remove="PlantersAid.ServiceLayer.Authorization\**" />
+    <EmbeddedResource Remove="PlantersAid.ServiceLayer.Authentication\**" />
+    <EmbeddedResource Remove="PlantersAid.ServiceLayer.Authorization\**" />
+    <None Remove="PlantersAid.ServiceLayer.Authentication\**" />
+    <None Remove="PlantersAid.ServiceLayer.Authorization\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Interfaces\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PlantersAid.DataAccessLayer\PlantersAid.DataAccessLayer.csproj" />
+    <ProjectReference Include="..\PlantersAid.Models\PlantersAid.Models.csproj" />
+  </ItemGroup>
+
+</Project>
