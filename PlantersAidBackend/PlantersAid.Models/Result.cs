@@ -4,12 +4,12 @@ using System.Text;
 
 namespace PlantersAid.Models
 {
-    public class AccessResult
+    public class Result
     {
-        bool Success { get; set; }
-        string Message { get; set; }
+        public bool Success { get; set; }
+        public string Message { get; set; }
 
-        public AccessResult(bool success, string message)
+        public Result(bool success, string message)
         {
             Success = success;
             Message = message;

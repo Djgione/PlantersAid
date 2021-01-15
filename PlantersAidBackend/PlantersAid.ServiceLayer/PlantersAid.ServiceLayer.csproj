@@ -18,6 +18,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Cryptography.KeyDerivation" Version="5.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\PlantersAid.DataAccessLayer\PlantersAid.DataAccessLayer.csproj" />
     <ProjectReference Include="..\PlantersAid.Models\PlantersAid.Models.csproj" />
   </ItemGroup>
