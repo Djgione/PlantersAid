@@ -93,7 +93,7 @@ namespace PlantersAid.ServiceLayer
         /// </summary>
         /// <param name="password"></param>
         /// <returns>True if Password meets requirements, false if not with message on which failed</returns>
-        private static Result CheckPasswordRequirements(string password)
+        public static Result CheckPasswordRequirements(string password)
         {
             Result result;
 
