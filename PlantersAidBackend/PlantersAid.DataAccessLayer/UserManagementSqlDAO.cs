@@ -9,7 +9,6 @@ namespace PlantersAid.DataAccessLayer
     public class UserManagementSqlDAO : IUserManagementDAO
     {
         private readonly string _connectionString;
-        private readonly string _userTable = "[PlantersAidAccountsUsers].[dbo].[users]";
 
         public UserManagementSqlDAO()
         {
@@ -21,7 +20,7 @@ namespace PlantersAid.DataAccessLayer
             Result result;
 
 
-
+            throw new NotImplementedException();
 
         }
     }

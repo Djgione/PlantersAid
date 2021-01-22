@@ -14,7 +14,6 @@ namespace PlantersAid.DataAccessLayer
     {
         private readonly string _accountsUsersConnectionString;
         private readonly string _restrictedInfoConnectionString;
-        private readonly string _userTable = "[PlantersAidAccountsUsers].[dbo].[users]";
         private readonly string _restrictedTable = "[PlantersAidRestrictedInfo].[dbo].[passwordinfo]";
         public AccountSqlDAO()
         {
@@ -281,7 +280,7 @@ namespace PlantersAid.DataAccessLayer
                     }
 
                     //Inserts into Users Table
-                    commandInitialCreate.CommandText = @"Insert into " + _userTable + @" (accountId) VALUES (@accountId)";
+                    commandInitialCreate.CommandText = @"Insert into " + UserTable.USER_TABLE_NAME + @" (accountId) VALUES (@accountId)";
                     commandInitialCreate.Parameters.AddWithValue("@accountId", accountId);
                     commandInitialCreate.ExecuteScalar();
 
@@ -400,7 +399,7 @@ namespace PlantersAid.DataAccessLayer
 
                 try
                 {
-                    command.CommandText = @"SELECT accountId FROM " + AccountTableACCOUNT_TABLE_NAME + @" WHERE email = @email";
+                    command.CommandText = @"SELECT accountId FROM " + AccountTable.ACCOUNT_TABLE_NAME + @" WHERE email = @email";
                     command.Parameters.AddWithValue("@email", email);
                     return (int)command.ExecuteScalar();
                 }
@@ -467,7 +466,7 @@ namespace PlantersAid.DataAccessLayer
                 try
                 {
                     //Deleting Account from the Restricted Database
-                    command.CommandText = "DELETE FROM " +  AccountTableACCOUNT_TABLE_NAME;
+                    command.CommandText = "DELETE FROM " +  AccountTable.ACCOUNT_TABLE_NAME;
 
                     command.ExecuteNonQuery();
                     transaction.Commit();
