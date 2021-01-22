@@ -15,7 +15,7 @@ namespace PlantersAid.Models
         public string Email { get; }
         public string Password { get; set; }
 
-        public Account(string email, string username, string password)
+        public Account(string email, string password)
         {
             Email = email;
             Password = password;

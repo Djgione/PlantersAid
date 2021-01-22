@@ -11,7 +11,6 @@ namespace PlantersAid.DataAccessLayer.Interfaces
     {
         /// <summary>
         /// Method for Retrieving Account from DB
-        /// Method for Retrieving Account from DB
         /// </summary>
         /// <returns></returns>
         public Account GetAccount(string identifier);
@@ -48,5 +47,8 @@ namespace PlantersAid.DataAccessLayer.Interfaces
         /// <param name="acc"></param>
         /// <returns></returns>
         public Result Login(Account acc);
+
+        public Result ClearDatabases();
+
     }
 }

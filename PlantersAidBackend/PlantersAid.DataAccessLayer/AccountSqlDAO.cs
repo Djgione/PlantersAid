@@ -4,19 +4,22 @@ using System.Text;
 using PlantersAid.DataAccessLayer.Interfaces;
 using PlantersAid.Models;
 using Microsoft.Data.SqlClient;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
+using PlantersAid.DataAccessLayer.SQLTableColumns;
+
 namespace PlantersAid.DataAccessLayer
 {
     public class AccountSqlDAO : IAccountDAO
     {
-        readonly string AccountsUsersConnectionString;
-        readonly string RestrictedInfoConnectionString;
-        readonly string AccountTable = "account";
-        readonly string UserTable = "user";
-        readonly string RestrictedTable = "passwordinfo";
+        private readonly string _accountsUsersConnectionString;
+        private readonly string _restrictedInfoConnectionString;
+        private readonly string _userTable = "[PlantersAidAccountsUsers].[dbo].[users]";
+        private readonly string _restrictedTable = "[PlantersAidRestrictedInfo].[dbo].[passwordinfo]";
         public AccountSqlDAO()
         {
-            AccountsUsersConnectionString = Environment.GetEnvironmentVariable("plantersAidAccountUsersConnectionString");
-            RestrictedInfoConnectionString = Environment.GetEnvironmentVariable("plantersAidRestrictedInfoConnectionString");
+            _accountsUsersConnectionString = Environment.GetEnvironmentVariable("plantersAidAccountUsersConnectionString");
+            _restrictedInfoConnectionString = Environment.GetEnvironmentVariable("plantersAidRestrictedInfoConnectionString");
         }
 
         /// <summary>
@@ -29,26 +32,26 @@ namespace PlantersAid.DataAccessLayer
             int accountId = RetrieveId(acc.Email);
             var build = new StringBuilder();
 
-            if(accountId == -1)
+            if(accountId < 1)
             {
                 result = new Result(false, "Account does not exist");
                 return result;
             }
 
 
-            using (var connection = new SqlConnection(RestrictedInfoConnectionString))
+            using (var connection = new SqlConnection(_restrictedInfoConnectionString))
             {
 
+                connection.Open();
                 SqlCommand command = connection.CreateCommand();
                 SqlTransaction transaction = connection.BeginTransaction();
 
                 command.Transaction = transaction;
-
+                command.Connection = connection;
                 try
                 {
                     //Deleting Account from the Restricted Database
-                    command.CommandText = "DELETE FROM @tableName WHERE accountId = @accountId";
-                    command.Parameters.AddWithValue("@tableName", RestrictedTable);
+                    command.CommandText = @"DELETE FROM " + _restrictedTable + @" WHERE accountId = @accountId";
                     command.Parameters.AddWithValue("@accountId", accountId);
 
                     command.ExecuteNonQuery();
@@ -71,24 +74,26 @@ namespace PlantersAid.DataAccessLayer
                 }
             }
 
-            using (var connection = new SqlConnection(AccountsUsersConnectionString))
+            using (var connection = new SqlConnection(_accountsUsersConnectionString))
             {
+                connection.Open();
+
                 SqlCommand command = connection.CreateCommand();
                 SqlTransaction transaction = connection.BeginTransaction();
 
                 command.Transaction = transaction;
+                command.Connection = connection;
 
                 try
                 {
                     //Deleting Account from the Restricted Database
-                    command.CommandText = "DELETE FROM @tableName WHERE accountId = @accountId";
-                    command.Parameters.AddWithValue("@tableName", AccountTable);
+                    command.CommandText = @"DELETE FROM " + AccountTable.ACCOUNT_TABLE_NAME + @" WHERE accountId = @accountId";
                     command.Parameters.AddWithValue("@accountId", accountId);
 
                     command.ExecuteNonQuery();
                     transaction.Commit();
 
-                    build.Append("Account removed from Account & User Table Successfully. ");
+                    build.Append("Account removed from Account & User Table Successfully.");
                 }
                 catch (Exception ex)
                 {
@@ -127,14 +132,14 @@ namespace PlantersAid.DataAccessLayer
         {
             Result result;
             var id = RetrieveId(acc.Email);
-            if(id == -1)
+            if(id < 1)
             {
                 result = new Result(false, "Account does not exist");
                 return result;
             }
 
 
-            using (var connection = new SqlConnection(RestrictedInfoConnectionString))
+            using (var connection = new SqlConnection(_restrictedInfoConnectionString))
             {
                 connection.Open();
 
@@ -148,9 +153,9 @@ namespace PlantersAid.DataAccessLayer
 
                 try
                 {
-                    command.CommandText = "Update password from @tableName where accoundId = @id";
-                    command.Parameters.AddWithValue("@tableName", AccountTable);
+                    command.CommandText = @"Update " + _restrictedTable + @" Set [password] = @password where accountId = @id";
                     command.Parameters.AddWithValue("@id", id);
+                    command.Parameters.AddWithValue("@password", acc.Password);
                     command.ExecuteNonQuery();
                     transaction.Commit();
                     result = new Result(true, "Password Successfully Updated");
@@ -177,13 +182,13 @@ namespace PlantersAid.DataAccessLayer
         {
             Result result;
             int accountId = RetrieveId(acc.Email);
-            if(accountId == -1)
+            if(accountId < 1)
             {
                 result = new Result(false, "Account does not exist");
                 return result;
             }
 
-            using (var connection = new SqlConnection(RestrictedInfoConnectionString))
+            using (var connection = new SqlConnection(_restrictedInfoConnectionString))
             {
                 connection.Open();
 
@@ -192,15 +197,25 @@ namespace PlantersAid.DataAccessLayer
                 try
                 {
 
-                    command.CommandText = "SELECT EXISTS (SELECT * FROM @tableName WHERE accountId = @accountId AND password = @password)";
-                    command.Parameters.AddWithValue("@tableName", RestrictedTable);
+                    command.CommandText = @"SELECT accountId FROM " + _restrictedTable + @" WHERE EXISTS(SELECT * FROM " + _restrictedTable + @" WHERE accountId = @accountId AND password = @password)";
                     command.Parameters.AddWithValue("@accountId", accountId);
                     command.Parameters.AddWithValue("@password", acc.Password);
 
-                    var rowsValid = (int) command.ExecuteScalar();
-                    if(rowsValid != 1)
+                    int response;
+                    var sqlResult = command.ExecuteScalar();
+                    if(sqlResult is null || sqlResult ==DBNull.Value)
                     {
-                        result = new Result(false, "Account was not found");
+                        response = -1;
+                    }
+                    else
+                    {
+                        response = (int)sqlResult;
+                    }
+
+
+                    if(response < 1 )
+                    {
+                        result = new Result(false, "Login Failed");
                     }
                     else
                     {
@@ -227,8 +242,9 @@ namespace PlantersAid.DataAccessLayer
             int accountId;
             StringBuilder build = new StringBuilder();
 
+
             //Connection to main Database
-            using (var connection = new SqlConnection(AccountsUsersConnectionString))
+            using (var connection = new SqlConnection(_accountsUsersConnectionString))
             {
                 connection.Open();
 
@@ -249,33 +265,25 @@ namespace PlantersAid.DataAccessLayer
                  * This section Creates the entry within the User Table with the Same accountId 
                  */
 
-                SqlCommand commandCreateUserEntry = connection.CreateCommand();
-
-                commandCreateUserEntry.Connection = connection;
-                commandCreateUserEntry.Transaction = transaction;
-
                 try
                 {
                     //Inserts into Account Table
-                    commandInitialCreate.CommandText = "Insert Into @tableName (email, salt) VALUES (@email, @salt)";
-                    commandInitialCreate.Parameters.AddWithValue("@tableName", AccountTable);
+                    commandInitialCreate.CommandText =@"Insert Into " + AccountTable.ACCOUNT_TABLE_NAME + @" (email, salt) OUTPUT INSERTED.accountId VALUES (@email, @salt)";
                     commandInitialCreate.Parameters.AddWithValue("@email", acc.Email);
-                    commandInitialCreate.Parameters.AddWithValue("@salt", Encoding.ASCII.GetString(salt));
-                    commandInitialCreate.ExecuteNonQuery();
+                    commandInitialCreate.Parameters.AddWithValue("@salt", salt);
 
-                    //Retrieves AccountId from AccountTable
-                    accountId = RetrieveId(acc.Email);
+
+                    accountId = (int) commandInitialCreate.ExecuteScalar();
                     if (accountId == -1)
                     {
-                        result = new Result(false, "Failed to Retrieve Salt");
+                        result = new Result(false, "Failed to Output Salt");
                         return result;
                     }
 
                     //Inserts into Users Table
-                    commandCreateUserEntry.CommandText = "Insert into @tableName (accountId) VALUES (@accountId)";
-                    commandCreateUserEntry.Parameters.AddWithValue("@tableName", UserTable);
-                    commandCreateUserEntry.Parameters.AddWithValue("@accountId", accountId);
-                    commandCreateUserEntry.ExecuteNonQuery();
+                    commandInitialCreate.CommandText = @"Insert into " + _userTable + @" (accountId) VALUES (@accountId)";
+                    commandInitialCreate.Parameters.AddWithValue("@accountId", accountId);
+                    commandInitialCreate.ExecuteScalar();
 
                     transaction.Commit();
                     build.Append("Inserts into Accounts and Users Table Successful. ");
@@ -299,18 +307,20 @@ namespace PlantersAid.DataAccessLayer
             }
 
             //Connection to other database
-            using (var connection = new SqlConnection(RestrictedInfoConnectionString))
+            using (var connection = new SqlConnection(_restrictedInfoConnectionString))
             {
                 connection.Open();
 
                 SqlCommand commandCreateRestricted = connection.CreateCommand();
                 SqlTransaction transactionRestricted = connection.BeginTransaction();
 
+                commandCreateRestricted.Connection = connection;
+                commandCreateRestricted.Transaction = transactionRestricted;
+                
                 try
                 {
                     //Inserting new account info into the restricted access database
-                    commandCreateRestricted.CommandText = "Insert into @tableName(accountId, password) VALUES (@accountId, @password)";
-                    commandCreateRestricted.Parameters.AddWithValue("@tableName", RestrictedTable);
+                    commandCreateRestricted.CommandText = @"Insert into " + _restrictedTable + @" ([accountId], [password]) VALUES (@accountId, @password)";
                     commandCreateRestricted.Parameters.AddWithValue("@accountId", accountId);
                     commandCreateRestricted.Parameters.AddWithValue("@password", acc.Password);
                     commandCreateRestricted.ExecuteNonQuery();
@@ -348,7 +358,7 @@ namespace PlantersAid.DataAccessLayer
         /// <returns></returns>
         public byte[] RetrieveSalt(string email)
         {
-            using (var connection = new SqlConnection(AccountsUsersConnectionString))
+            using (var connection = new SqlConnection(_accountsUsersConnectionString))
             {
                 connection.Open();
 
@@ -357,14 +367,14 @@ namespace PlantersAid.DataAccessLayer
 
                 try
                 {
-                    command.CommandText = "Select salt from @tableName where email = @email";
-                    command.Parameters.AddWithValue("@tableName", AccountTable);
+                    command.CommandText = @"Select salt from "+ AccountTable.ACCOUNT_TABLE_NAME+ @" where email = @email";
                     command.Parameters.AddWithValue("@email", email);
-                    using (SqlDataReader reader = command.ExecuteReader())
-                    {
-                        var result = reader.GetString(0);
-                        return Encoding.ASCII.GetBytes(result);
-                    }
+
+                    var result = (byte[])command.ExecuteScalar();
+                    if (result is null)
+                        return null;
+                    return result;
+                    
                 }
                 catch (Exception ex)
                 {
@@ -381,23 +391,18 @@ namespace PlantersAid.DataAccessLayer
         private int RetrieveId(string email)
         {
            
-            using (var connection = new SqlConnection(AccountsUsersConnectionString))
+            using (var connection = new SqlConnection(_accountsUsersConnectionString))
             {
                 connection.Open();
 
                 SqlCommand command = connection.CreateCommand();
                 command.Connection = connection;
 
-
                 try
                 {
-                    command.CommandText = "Select accountId from @tableName where email = @email";
-                    command.Parameters.AddWithValue("@tableName", AccountTable);
+                    command.CommandText = @"SELECT accountId FROM " + AccountTableACCOUNT_TABLE_NAME + @" WHERE email = @email";
                     command.Parameters.AddWithValue("@email", email);
-                    using (SqlDataReader reader = command.ExecuteReader())
-                    {
-                        return reader.GetInt32(0);
-                    }
+                    return (int)command.ExecuteScalar();
                 }
                 catch(Exception ex)
                 {
@@ -408,5 +413,85 @@ namespace PlantersAid.DataAccessLayer
 
             }
         }
+
+        private String WrapParameters(string str)
+        {
+            return "\'" + str + "\'";
+        }
+
+        public Result ClearDatabases()
+        {
+            Result result;
+            var build = new StringBuilder();
+
+            using (var connection = new SqlConnection(_restrictedInfoConnectionString))
+            {
+
+                SqlCommand command = connection.CreateCommand();
+                SqlTransaction transaction = connection.BeginTransaction();
+
+                command.Transaction = transaction;
+
+                try
+                {
+                    //Deleting Account from the Restricted Database
+                    command.CommandText = @"DELETE FROM " + _restrictedTable;
+
+                    command.ExecuteNonQuery();
+                    transaction.Commit();
+
+                    build.Append("Accounts removed from Restricted Table Successfully. ");
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        transaction.Rollback();
+                        result = new Result(false, ex.ToString());
+                    }
+                    catch (Exception e)
+                    {
+                        result = new Result(false, $"Outer Exception: {ex} | Inner Exception {e}");
+                    }
+                    return result;
+                }
+            }
+
+            using (var connection = new SqlConnection(_accountsUsersConnectionString))
+            {
+                SqlCommand command = connection.CreateCommand();
+                SqlTransaction transaction = connection.BeginTransaction();
+
+                command.Transaction = transaction;
+
+                try
+                {
+                    //Deleting Account from the Restricted Database
+                    command.CommandText = "DELETE FROM " +  AccountTableACCOUNT_TABLE_NAME;
+
+                    command.ExecuteNonQuery();
+                    transaction.Commit();
+
+                    build.Append("Account removed from Account & User Table Successfully. ");
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        transaction.Rollback();
+                        result = new Result(false, ex.ToString());
+                    }
+                    catch (Exception e)
+                    {
+                        result = new Result(false, $"Outer Exception: {ex} | Inner Exception {e}");
+                    }
+                    return result;
+                }
+            }
+
+            result = new Result(true, build.ToString());
+            return result;
+        }
+
     }
 }

@@ -20,7 +20,7 @@ namespace PlantersAid.ServiceLayer
 
         public Result DeleteAccount(Account acc)
         {
-            throw new NotImplementedException();
+            return DataAccess.DeleteAccount(acc);
         }
 
         /// <summary>
@@ -72,6 +72,12 @@ namespace PlantersAid.ServiceLayer
 
             if(!result.Success)
                 return result;
+
+            byte[] salt = DataAccess.RetrieveSalt(acc.Email);
+            if (salt is null)
+                return new Result(false, "Account does not exist.");
+
+            acc.Password = Hasher(acc.Password, salt);
 
             return DataAccess.ChangePassword(acc);
         }
@@ -132,6 +138,7 @@ namespace PlantersAid.ServiceLayer
             return result;
 
         }
+
 
     }
 }
