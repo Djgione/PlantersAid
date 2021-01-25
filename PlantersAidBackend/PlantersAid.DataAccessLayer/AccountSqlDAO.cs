@@ -387,7 +387,7 @@ namespace PlantersAid.DataAccessLayer
         }
     
 
-        private int RetrieveId(string email)
+        public int RetrieveId(string email)
         {
            
             using (var connection = new SqlConnection(_accountsUsersConnectionString))

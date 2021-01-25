@@ -50,5 +50,6 @@ namespace PlantersAid.DataAccessLayer.Interfaces
 
         public Result ClearDatabases();
 
+        public int RetrieveId(string email);
     }
 }

@@ -139,6 +139,9 @@ namespace PlantersAid.ServiceLayer
 
         }
 
-
+        public int RetrieveId(string email)
+        {
+            return DataAccess.RetrieveId(email);
+        }
     }
 }
