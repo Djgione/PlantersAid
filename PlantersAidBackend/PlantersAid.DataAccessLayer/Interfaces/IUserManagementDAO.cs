@@ -7,8 +7,9 @@ namespace PlantersAid.DataAccessLayer.Interfaces
 {
     public interface IUserManagementDAO
     {
-        public Result UpdateProfile(Profile profile);
+        public Result UpdateProfile(int id, Profile profile);
 
+        public Result UpdateProfilePicture(int id, byte [] image);
 
     }
 }

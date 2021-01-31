@@ -17,7 +17,7 @@ namespace PlantersAid.DataAccessLayer
             _connectionString = Environment.GetEnvironmentVariable("plantersAidAccountUsersConnectionString");
         }
 
-        public Result UpdateProfile(Profile profile)
+        public Result UpdateProfile(int id, Profile profile)
         {
             Result result;
 
@@ -40,7 +40,7 @@ namespace PlantersAid.DataAccessLayer
                     command.Parameters.AddWithValue("@FirstName", profile.FirstName);
                     command.Parameters.AddWithValue("@LastName", profile.LastName);
                     command.Parameters.AddWithValue("@Gender", profile.Gender);
-                    command.Parameters.AddWithValue("@Id", profile.Id);
+                    command.Parameters.AddWithValue("@Id", id);
 
                     command.ExecuteNonQuery();
                     transaction.Commit();
@@ -68,6 +68,5 @@ namespace PlantersAid.DataAccessLayer
 
         }
 
-        //public Result UpdateProfilePicture(int id, )
     }
 }
