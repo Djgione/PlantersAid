@@ -6,13 +6,13 @@ namespace PlantersAid.Models
 {
     public class Profile
     {
-        public  string Username { get; }
-        public  string FirstName { get; }
-        public string LastName { get; }
-        public DateTime DateOfBirth { get; }
-        public string Gender { get; }
+        public  string Username { get; set; }
+        public  string FirstName { get; set; }
+        public string LastName { get; set; }
+        public DateTime DateOfBirth { get; set; }
+        public string Gender { get; set; }
 
-        public Profile(string username, string firstName, string lastName, DateTime dateOfBirth, string gender)
+        public Profile(string username, string firstName, string lastName, string gender, DateTime dateOfBirth)
         {
             Username = username;
             FirstName = firstName;

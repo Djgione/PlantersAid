@@ -11,5 +11,9 @@ namespace PlantersAid.DataAccessLayer.Interfaces
 
         public Result UpdateProfilePicture(int id, byte [] image);
 
+        public Profile RetrieveProfile(int id);
+
+        public byte[] RetrieveProfilePicture(int id);
+
     }
 }

@@ -8,7 +8,7 @@ namespace PlantersAid.DataAccessLayer.SQLTableColumns
 {
     public static class ProfilePicTable
     {
-        public const string PROFILE_PIC_TABLE_NAME = "[PlantersAidAccountsUsers].[dbo].";
+        public const string PROFILE_PIC_TABLE_NAME = "[PlantersAidAccountsUsers].[dbo].[profilePictures]";
         public const string ACCOUNT_ID_COLUMN_NAME = "[accountId]";
         public const string PROFILE_PIC_COLUMN_NAME = "[profilePicture]";
 

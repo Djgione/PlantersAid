@@ -20,10 +20,53 @@ namespace PlantersAid.ServiceLayer
 
         public Result UpdateProfile(int id, Profile profile)
         {
-            return DataAccess.UpdateProfile(id, profile);
+            try
+            {
+                return DataAccess.UpdateProfile(id, profile);
+            }
+            catch(Exception)
+            {
+                throw;
+            }
+        }
+
+        public Result UpdateProfilePicture(int id, byte[] image)
+        {
+            try
+            {
+                return DataAccess.UpdateProfilePicture(id, image);
+            }
+            catch (Exception)
+            { 
+                throw;
+            }
+          
+        }
+
+        public Profile RetrieveProfile(int id)
+        {
+            try
+            {
+                return DataAccess.RetrieveProfile(id);
+            }
+            catch(Exception)
+            {
+                throw;
+            }
         }
 
 
+        public byte[] RetrieveProfilePicture(int id)
+        {
+            try
+            {
+                return DataAccess.RetrieveProfilePicture(id);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
 
 
     }

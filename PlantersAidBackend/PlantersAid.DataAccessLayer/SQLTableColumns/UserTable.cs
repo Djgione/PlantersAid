@@ -14,5 +14,6 @@ namespace PlantersAid.DataAccessLayer.SQLTableColumns
         public const string LASTNAME_COLUMN_NAME = "[LastName]";
         public const string DATEOFBIRTH_COLUMN_NAME = "[DateOfBirth]";
         public const string GENDER_COLUMN_NAME = "[Gender]";
+        public const string ACCOUNTID_COLUMN_NAME = "[accountId]";
     }
 }
