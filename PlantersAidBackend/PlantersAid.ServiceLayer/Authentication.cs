@@ -18,9 +18,20 @@ namespace PlantersAid.ServiceLayer
             DataAccess = dataAccess;
         }
 
-        public Result DeleteAccount(Account acc)
+        public Result DeleteAccount(String email)
         {
-            return DataAccess.DeleteAccount(acc);
+            try
+            {
+                int id = DataAccess.RetrieveId(email);
+
+                return DataAccess.DeleteAccount(id);
+
+            }
+            catch(Exception)
+            {
+                return new Result(false, "Account Failed to Delete");
+            }
+
         }
 
         /// <summary>

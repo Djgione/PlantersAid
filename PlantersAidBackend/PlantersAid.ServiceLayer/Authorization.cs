@@ -6,6 +6,6 @@ namespace PlantersAid.ServiceLayer
 {
     public class Authorization
     {
-
+        
     }
 }

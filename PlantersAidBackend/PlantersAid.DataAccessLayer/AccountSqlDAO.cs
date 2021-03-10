@@ -25,10 +25,9 @@ namespace PlantersAid.DataAccessLayer
         /// SQL Method Implementation for Deleting Account
         /// </summary>
         /// <returns></returns>
-        public Result DeleteAccount(Account acc)
+        public Result DeleteAccount(int accountId)
         {
             Result result;
-            int accountId = RetrieveId(acc.Email);
             var build = new StringBuilder();
 
             if(accountId < 1)
@@ -114,11 +113,99 @@ namespace PlantersAid.DataAccessLayer
 
         }
 
+        public Result DeleteAccount(ICollection<int> ids)
+        {
+            Result result;
+            StringBuilder build = new StringBuilder();
+
+            using (var connection = new SqlConnection(_restrictedInfoConnectionString))
+            {
+
+                connection.Open();
+                SqlCommand command = connection.CreateCommand();
+                SqlTransaction transaction = connection.BeginTransaction();
+
+                command.Transaction = transaction;
+                command.Connection = connection;
+                try
+                {
+                    //Deleting Account from the Restricted Database
+                    command.CommandText = @"DELETE FROM " + _restrictedTable + @" WHERE accountId = @accountId";
+
+                    foreach (int id in ids)
+                    {
+                        command.Parameters.AddWithValue("@accountId", id);
+                        command.ExecuteNonQuery();
+                    }
+
+                    transaction.Commit();
+
+                    build.Append("Accounts removed from Restricted Table Successfully. ");
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        transaction.Rollback();
+                        result = new Result(false, ex.ToString());
+                    }
+                    catch (Exception e)
+                    {
+                        result = new Result(false, $"Outer Exception: {ex} | Inner Exception {e}");
+                    }
+                    return result;
+                }
+            }
+
+
+            using (var connection = new SqlConnection(_accountsUsersConnectionString))
+            {
+                connection.Open();
+
+                SqlCommand command = connection.CreateCommand();
+                SqlTransaction transaction = connection.BeginTransaction();
+
+                command.Transaction = transaction;
+                command.Connection = connection;
+
+                try
+                {
+                    //Deleting Account from the Restricted Database
+                    command.CommandText = @"DELETE FROM " + AccountTable.ACCOUNT_TABLE_NAME + @" WHERE accountId = @accountId";
+                    foreach (int id in ids)
+                    { 
+                        command.Parameters.AddWithValue("@accountId", id);
+                        command.ExecuteNonQuery();
+                    }
+                    transaction.Commit();
+
+                    build.Append("Accounts removed from Account & User Table Successfully.");
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        transaction.Rollback();
+                        result = new Result(false, ex.ToString());
+                    }
+                    catch (Exception e)
+                    {
+                        result = new Result(false, $"Outer Exception: {ex} | Inner Exception {e}");
+                    }
+                    return result;
+
+                }
+            }
+
+            result = new Result(true, build.ToString());
+            return result;
+        }
+
         /// <summary>
         /// SQL Method Implementation for Retreiving Account from DB
         /// </summary>
         /// <returns></returns>
-        public Account GetAccount(string identifier)
+        public Account GetAccount(int identifier)
         {
             throw new NotImplementedException();
         }

@@ -13,15 +13,21 @@ namespace PlantersAid.DataAccessLayer.Interfaces
         /// Method for Retrieving Account from DB
         /// </summary>
         /// <returns></returns>
-        public Account GetAccount(string identifier);
+        public Account GetAccount(int identifier);
 
         /// <summary>
         /// Method for Deleting Account for DB
         /// </summary>
         /// <returns>AccessResult with Boolean of Success</returns>
-        public Result DeleteAccount(Account acc);
+        public Result DeleteAccount(int id);
 
 
+        /// <summary>
+        /// Method for Deleting Many Accounts at Once
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <returns></returns>
+        public Result DeleteAccount(ICollection<int> ids);
         /// <summary>
         /// Method for Changing Password
         /// </summary>
