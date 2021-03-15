@@ -16,6 +16,6 @@ namespace PlantersAid.ServiceLayer.Interfaces
         /// </summary>
         /// <param name="email"></param>
         /// <returns></returns>
-        public string BuildToken(string email);
+        public string BuildToken(string email, string username);
     }
 }

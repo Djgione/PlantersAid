@@ -12,7 +12,7 @@ namespace PlantersAid.ServiceLayer
 {
     public class LoginTokenBuilder : ITokenBuilder
     {
-        public string BuildToken(string email)
+        public string BuildToken(string email, string username)
         {
             
             var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("loginSymmetricSecurityKey")));
@@ -22,9 +22,11 @@ namespace PlantersAid.ServiceLayer
 
             var claims = new Claim[]
             {
+                new Claim(JwtRegisteredClaimNames.Iss, "https://plantersaid.com"),
                 new Claim(JwtRegisteredClaimNames.Email, email),
                 new Claim(JwtRegisteredClaimNames.Iat, issueTime.ToUnixTimeSeconds().ToString()),
                 new Claim(JwtRegisteredClaimNames.Exp, expiryTime.ToUnixTimeSeconds().ToString()),
+                new Claim("preferred_username", username),
             };
 
             var jwt = new JwtSecurityToken(claims: claims, signingCredentials: signingCredentials);
