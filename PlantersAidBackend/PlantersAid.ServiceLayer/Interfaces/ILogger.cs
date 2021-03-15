@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PlantersAid.ServiceLayer.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,7 +13,8 @@ namespace PlantersAid.ServiceLayer.Interfaces
         /// Log String  
         /// </summary>
         /// <param name="str"></param>
-        public void Log(String str);
-        public void Log(Object obj);
+        public Task Log(String str);
+        public Task Log(String str, LogLevel level);
+        public Task Log(Exception ex);
     }
 }

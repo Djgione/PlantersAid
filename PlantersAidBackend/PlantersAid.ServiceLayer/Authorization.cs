@@ -16,6 +16,9 @@ namespace PlantersAid.ServiceLayer
         }
 
         public bool Authorize()
+        {
+            throw new NotImplementedException();
+        }
 
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PlantersAid.Models.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,7 +11,7 @@ namespace PlantersAid.Models
     /// Minimum Information to Interact on the Application
     /// Used mainly for identification and authentication
     /// </summary>
-    public class Account
+    public class Account : Maskable
     {
         public string Email { get; }
         public string Password { get; set; }
@@ -21,5 +22,9 @@ namespace PlantersAid.Models
             Password = password;
         }
 
+        public override string ToString()
+        {
+            return "Email: " + Email + ", Password: " + Mask();
+        }
     }
 }

@@ -1,10 +1,11 @@
-﻿using System;
+﻿using PlantersAid.Models.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace PlantersAid.Models
 {
-    public class Profile
+    public class Profile : Maskable
     {
         public  string Username { get; set; }
         public  string FirstName { get; set; }
@@ -19,6 +20,11 @@ namespace PlantersAid.Models
             LastName = lastName;
             DateOfBirth = dateOfBirth;
             Gender = gender;
+        }
+
+        public override string ToString()
+        {
+            return "Username: " + Mask() + " , First Name: " + Mask() + ", Last Name: " + Mask() + "Gender: " + Gender + ", Date of Birth: " + DateOfBirth;
         }
     }
 }
