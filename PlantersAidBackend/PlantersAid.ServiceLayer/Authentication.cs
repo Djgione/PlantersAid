@@ -1,158 +1,75 @@
-﻿using PlantersAid.DataAccessLayer.Interfaces;
-using PlantersAid.Models;
+﻿using Microsoft.IdentityModel.Tokens;
+using PlantersAid.DataAccessLayer.Interfaces;
+using PlantersAid.ServiceLayer.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Security.Cryptography;
-using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using System.Threading.Tasks;
+using System.Security.Claims;
+using PlantersAid.Models;
 
 namespace PlantersAid.ServiceLayer
 {
-    public class Authentication
+    public class Authentication : IAuthService
     {
-        
-        public IAccountDAO DataAccess { get; }
-        public Authentication (IAccountDAO dataAccess)
+        public IAccountDAO AccountDataAccess { get; }
+        public IUserManagementDAO UserDataAccess { get; }
+
+        public Authentication(IAccountDAO dataAccessAcc, IUserManagementDAO dataAccessUser)
         {
-            DataAccess = dataAccess;
-        }
-
-        public Result DeleteAccount(String email)
-        {
-            try
-            {
-                int id = DataAccess.RetrieveId(email);
-
-                return DataAccess.DeleteAccount(id);
-
-            }
-            catch(Exception)
-            {
-                return new Result(false, "Account Failed to Delete");
-            }
-
+            AccountDataAccess = dataAccessAcc;
+            UserDataAccess = dataAccessUser;
         }
 
         /// <summary>
-        /// Attempt to Create Account with IAccountDAO
-        /// Creates Salt and Hashes with HMACSHA512
-        /// 
+        /// Method that creates the JwtSecurityToken utilizing the ID from the database
+        /// Better than using other information from database as the ID will never change, so users can be logged in on multiple items while changing account info
         /// </summary>
-        /// <param name="acc"></param>
+        /// <param name="account"></param>
         /// <returns></returns>
-        public Result CreateAccount(Account acc)
+        private string buildToken(Account account)
         {
-            Result result = CheckPasswordRequirements(acc.Password);
-            //If Password does not Meet Requirements
-            if(!result.Success)
-                return result;
-            
-
-            byte[] salt = new byte[128 / 8];
-            using (var rng = RandomNumberGenerator.Create())
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(Environment.GetEnvironmentVariable("loginSymmetricSecurityKey"));
+            var tokenDescriptor = new SecurityTokenDescriptor
             {
-                rng.GetBytes(salt);
-            }
-
-            acc.Password = Hasher(acc.Password, salt);
-
-            return DataAccess.CreateAccount(acc, salt);
+                Subject = new ClaimsIdentity(new[] { new Claim("id", account.Id.ToString()) }),
+                Expires = DateTime.UtcNow.AddDays(2),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
         }
 
-
         /// <summary>
-        /// Attempts to Log in with Account credentials contained in Account acc
+        /// Authenticates a Login Request coming in the form of AuthnRequest, and creates a AuthnResponse with the correct information
         /// </summary>
-        /// <param name="acc"></param>
+        /// <param name="request"></param>
         /// <returns></returns>
-        public Result Login(Account acc)
+        public AuthnResponse Authenticate(AuthnRequest request)
         {
-            byte [] salt = DataAccess.RetrieveSalt(acc.Email);
-            if (salt is null)
-                return new Result(false, "Account does not exist.");
-
-            acc.Password = Hasher(acc.Password,salt);
-
-            return DataAccess.Login(acc);
-        }
-
-        public Result ChangePassword(Account acc)
-        {
-            Result result = CheckPasswordRequirements(acc.Password);
-
-            if(!result.Success)
-                return result;
-
-            byte[] salt = DataAccess.RetrieveSalt(acc.Email);
-            if (salt is null)
-                return new Result(false, "Account does not exist.");
-
-            acc.Password = Hasher(acc.Password, salt);
-
-            return DataAccess.ChangePassword(acc);
-        }
-
-        private static string Hasher(string password, byte[] salt)
-        {
-            return Convert.ToBase64String(KeyDerivation.Pbkdf2(
-                password: password,
-                salt: salt,
-                prf: KeyDerivationPrf.HMACSHA512,
-                iterationCount: 10000,
-                numBytesRequested: 256 / 8));
-
-        }
+            //Builds an account from the incoming request
+            var account = new Account(request.Email, request.Password, RetrieveId(request.Email));
 
 
-        /// <summary>
-        /// Puts Password through set of Requirements to make sure it holds to standard
-        /// </summary>
-        /// <param name="password"></param>
-        /// <returns>True if Password meets requirements, false if not with message on which failed</returns>
-        public static Result CheckPasswordRequirements(string password)
-        {
-            Result result;
 
-            //Password Length Check
-            if (password.Length < 8)
-            {
-                result = new Result(false, "Password does not meet length requirements");
-                return result;
-            }
 
-            Match match = Regex.Match(password, "[a-z]");
-            //Password Lowercase Letter Check
-            if (match.Success == false)
-            {
-                result = new Result(false, "Password does not contain a lowercase letter");
-                return result;
-            }
+            // T E M P O R A R Y
+            Profile profile;
+            throw new NotImplementedException();
 
-            match = Regex.Match(password, "[A-Z]");
-            //Password Uppercase Letter Check
-            if (match.Success == false)
-            {
-                result = new Result(false, "Password does not contain an uppercase letter");
-                return result;
-            }
 
-            match = Regex.Match(password, "[0-9]");
-            //Password Digit Check
-            if(match.Success == false)
-            {
-                result = new Result(false, "Password does not contain a digit");
-                return result;
-            }
 
-            result = new Result(true, "Password met all Requirements");
-            return result;
+            var token = buildToken(account);
 
+            return new AuthnResponse(account, profile, token);
         }
 
         public int RetrieveId(string email)
         {
-            return DataAccess.RetrieveId(email);
+            return AccountDataAccess.RetrieveId(email);
         }
     }
 }

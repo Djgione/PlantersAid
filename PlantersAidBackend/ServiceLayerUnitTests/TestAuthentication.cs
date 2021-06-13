@@ -10,10 +10,10 @@ namespace ServiceLayerUnitTests
     public class TestAuthentication
 
     {
-        private Authentication Construct()
+        private AccountService Construct()
         {
             var dao = new AccountSqlDAO();
-            return new Authentication(dao);
+            return new AccountService(dao);
         }
 
         [TestMethod]
@@ -22,7 +22,7 @@ namespace ServiceLayerUnitTests
 
             var mockPassword = "abcd";
 
-            var result = Authentication.CheckPasswordRequirements(mockPassword);
+            var result = AccountService.CheckPasswordRequirements(mockPassword);
 
             Assert.IsFalse(result.Success);
             Assert.AreEqual("Password does not meet length requirements", result.Message);
@@ -34,7 +34,7 @@ namespace ServiceLayerUnitTests
         {
             var mockPassword = "ABCDEFGH8*";
 
-            var result = Authentication.CheckPasswordRequirements(mockPassword);
+            var result = AccountService.CheckPasswordRequirements(mockPassword);
 
             Assert.IsFalse(result.Success);
             Assert.AreEqual("Password does not contain a lowercase letter", result.Message);
@@ -45,7 +45,7 @@ namespace ServiceLayerUnitTests
         {
             var mockPassword = "abcdefgh123*";
 
-            var result = Authentication.CheckPasswordRequirements(mockPassword);
+            var result = AccountService.CheckPasswordRequirements(mockPassword);
 
             Assert.IsFalse(result.Success);
             Assert.AreEqual("Password does not contain an uppercase letter", result.Message);
@@ -56,7 +56,7 @@ namespace ServiceLayerUnitTests
         {
             var mockPassword = "ABDCefgh****";
 
-            var result = Authentication.CheckPasswordRequirements(mockPassword);
+            var result = AccountService.CheckPasswordRequirements(mockPassword);
 
             Assert.IsFalse(result.Success);
             Assert.AreEqual("Password does not contain a digit", result.Message);
@@ -68,7 +68,7 @@ namespace ServiceLayerUnitTests
         {
             var mockPassword = "ABDCefgh1234****";
 
-            var result = Authentication.CheckPasswordRequirements(mockPassword);
+            var result = AccountService.CheckPasswordRequirements(mockPassword);
 
             Assert.IsTrue(result.Success);
             Assert.AreEqual("Password met all Requirements", result.Message);

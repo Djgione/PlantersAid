@@ -1,4 +1,5 @@
 ﻿using PlantersAid.Models.Interfaces;
+using System.Text.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,11 +14,15 @@ namespace PlantersAid.Models
     /// </summary>
     public class Account : Maskable
     {
-        public string Email { get; }
+        public int Id { get; set; }
+        public string Email { get; set; }
+
+        [JsonIgnore]
         public string Password { get; set; }
 
-        public Account(string email, string password = "")
+        public Account(string email, string password = "", int id = -1)
         {
+            Id = id;
             Email = email;
             Password = password;
         }

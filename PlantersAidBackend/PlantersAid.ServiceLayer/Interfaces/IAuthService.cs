@@ -6,16 +6,18 @@ using System.Threading.Tasks;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using PlantersAid.Models;
 
 namespace PlantersAid.ServiceLayer.Interfaces
 {
-    public interface ITokenBuilder
+    public interface IAuthService
     {
         /// <summary>
-        /// Build token for JWT to send to FrontEnd
+        /// Authenticates the AuthnRequest incoming from controller
+        /// Returns an AuthnResponse with relevant information
         /// </summary>
         /// <param name="email"></param>
         /// <returns></returns>
-        public string BuildToken(string email, string username);
+        AuthnResponse Authenticate(AuthnRequest request);
     }
 }
