@@ -17,6 +17,10 @@ namespace PlantersAid.ServiceLayer
         public IAccountDAO AccountDataAccess { get; }
         public IUserManagementDAO UserDataAccess { get; }
 
+        public static readonly string ClaimsRole = "UserRole";
+        private readonly string IssuerAudience = "plantersaid.com";
+        
+
         public Authentication(IAccountDAO dataAccessAcc, IUserManagementDAO dataAccessUser)
         {
             AccountDataAccess = dataAccessAcc;
@@ -35,7 +39,11 @@ namespace PlantersAid.ServiceLayer
             var key = Encoding.ASCII.GetBytes(Environment.GetEnvironmentVariable("loginSymmetricSecurityKey"));
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[] { new Claim("id", account.Id.ToString()) }),
+                Subject = new ClaimsIdentity(new[] {
+                    new Claim(ClaimTypes.NameIdentifier, account.Id.ToString()),
+                }),
+                Issuer = IssuerAudience,
+                Audience = IssuerAudience,
                 Expires = DateTime.UtcNow.AddDays(2),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature)
             };
