@@ -24,11 +24,21 @@ namespace PlantersAid.ServiceLayer
             {
                 int id = DataAccess.RetrieveId(email);
 
-                return DataAccess.DeleteAccount(id);
+                var result = DataAccess.DeleteAccount(id);
 
+                if (result.Success)
+                {
+                    Logger.Log("Account Deleted Successfully");
+                }
+                else
+                {
+                    Logger.Log("Account failed to Delete");
+                }
+                return result;
             }
             catch(Exception)
             {
+                Logger.Log("Account failed to Delete");
                 return new Result(false, "Account Failed to Delete");
             }
 
@@ -46,7 +56,11 @@ namespace PlantersAid.ServiceLayer
             Result result = CheckPasswordRequirements(acc.Password);
             //If Password does not Meet Requirements
             if(!result.Success)
+            {
+                Logger.Log("Password Did Not Meet Requirements");
                 return result;
+            }
+                
             
 
             byte[] salt = new byte[128 / 8];
@@ -57,40 +71,52 @@ namespace PlantersAid.ServiceLayer
 
             acc.Password = Hasher(acc.Password, salt);
 
-            return DataAccess.CreateAccount(acc, salt);
+            Logger.Log("Password Succesfully Hashed, Attempting Store");
+
+            var finalResult = DataAccess.CreateAccount(acc, salt);
+
+            if(finalResult.Success)
+            {
+                Logger.Log("Account Successfully Created");
+            }
+            else
+            {
+                Logger.Log("Account Failed to Create");
+            }
+
+            return finalResult;
         }
-
-
+ 
         /// <summary>
-        /// Attempts to Log in with Account credentials contained in Account acc
+        /// The Method used to change the password of an account 
         /// </summary>
         /// <param name="acc"></param>
         /// <returns></returns>
-        public Result Login(Account acc)
-        {
-            byte [] salt = DataAccess.RetrieveSalt(acc.Email);
-            if (salt is null)
-                return new Result(false, "Account does not exist.");
-
-            acc.Password = Hasher(acc.Password,salt);
-
-            return DataAccess.Login(acc);
-        }
-
         public Result ChangePassword(Account acc)
         {
             Result result = CheckPasswordRequirements(acc.Password);
 
-            if(!result.Success)
+            if (!result.Success)
+            {
+                Logger.Log(result.Message);
                 return result;
+            }
+                
 
             byte[] salt = DataAccess.RetrieveSalt(acc.Email);
             if (salt is null)
-                return new Result(false, "Account does not exist.");
+            {
+                var badResult = new Result(false, "Account does not exist.");
+                Logger.Log(badResult.Message);
+                return badResult;
+            }
+                
 
             acc.Password = Hasher(acc.Password, salt);
 
-            return DataAccess.ChangePassword(acc);
+            var goodResult = DataAccess.ChangePassword(acc);
+            Logger.Log(goodResult.Message);
+            return goodResult;
         }
 
         private static string Hasher(string password, byte[] salt)
