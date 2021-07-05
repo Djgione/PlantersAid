@@ -17,9 +17,10 @@ namespace PlantersAid.Models
         public string Gender { get; set; }
         public DateTime DateOfBirth { get; set; }
         public string Token { get; set; }
+        public string DeviceId { get; set; }
 
 
-        public AuthnResponse(Account account, Profile profile, string token)
+        public AuthnResponse(Account account, Profile profile, string token, string deviceId)
         {
             Id = account.Id;
             Username = profile.Username;
@@ -29,7 +30,7 @@ namespace PlantersAid.Models
             Email = account.Email;
             DateOfBirth = profile.DateOfBirth;
             Token = token;
-
+            DeviceId = deviceId;
         }
     }
 }

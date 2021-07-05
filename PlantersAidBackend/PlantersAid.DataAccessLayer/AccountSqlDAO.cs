@@ -113,6 +113,11 @@ namespace PlantersAid.DataAccessLayer
 
         }
 
+        /// <summary>
+        /// Deletes a collection of Id's, Cascade Delete Handled by SQL
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <returns></returns>
         public Result DeleteAccount(ICollection<int> ids)
         {
             Result result;
@@ -205,10 +210,10 @@ namespace PlantersAid.DataAccessLayer
         /// SQL Method Implementation for Retreiving Account from DB
         /// </summary>
         /// <returns></returns>
-        public Account GetAccount(int identifier)
-        {
-            throw new NotImplementedException();
-        }
+        //public Account GetAccount(int identifier)
+        //{
+        //    throw new NotImplementedException();
+        //}
 
         /// <summary>
         /// SQL Method Implementation for Changing Password
@@ -224,7 +229,7 @@ namespace PlantersAid.DataAccessLayer
                 return result;
             }
 
-
+            //Creates connection to restricted info, attempts to change password based on the accountId
             using (var connection = new SqlConnection(_restrictedInfoConnectionString))
             {
                 connection.Open();
@@ -254,8 +259,39 @@ namespace PlantersAid.DataAccessLayer
                     Console.WriteLine(ex.ToString());
                     result = new Result(false, ex.ToString());
                 }
-                return result;
             }
+            //Creates connection to the Account, attempts to delete all refresh tokens to force login 
+            using (var connection = new SqlConnection(_accountsUsersConnectionString))
+            {
+                connection.Open();
+
+                SqlCommand command = connection.CreateCommand();
+                SqlTransaction transaction;
+
+                transaction = connection.BeginTransaction();
+
+                command.Connection = connection;
+                command.Transaction = transaction;
+
+                try
+                {
+                    command.CommandText = @"Delete From " + RefreshTokenTable.REFRESH_TOKEN_TABLE_NAME + @" Where " + RefreshTokenTable.ACCOUNTID_COLUMN_NAME + @" = @id";
+                    command.Parameters.AddWithValue("@id", id);
+                    command.ExecuteNonQuery();
+                    transaction.Commit();
+
+                    result.Message += "All Refresh Tokens have been deleted";
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    result.Success = false;
+                    result.Message+="Refresh Tokens failed to Delete\n" + ex.ToString();
+                }
+            }
+
+            return result;
+
         }
     
 

@@ -9,11 +9,16 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Security.Claims;
 using PlantersAid.Models;
+using System.Security.Cryptography;
 
 namespace PlantersAid.ServiceLayer
 {
     public class Authentication : IAuthService
     {
+        // Byte sizes for refresh token and device id
+        private const int REFRESH_TOKEN_SIZE = 32;
+        private const int DEVICE_ID_SIZE = 20;
+        private const int REFRESH_TOKEN_DURATION = 90;
         public IAccountDAO AccountDataAccess { get; }
         public IUserManagementDAO UserDataAccess { get; }
 
@@ -73,12 +78,22 @@ namespace PlantersAid.ServiceLayer
                 return null;
             }
             //If the Login Method from the AccountSqlDAO Works, use the same account that you used to start that method and combine it with a retrieved profile in order to create the AuthnResponse
+            //Creates the profile, token, device id, and refresh token
             var profile = UserDataAccess.RetrieveProfile(account.Id);
             var token = BuildToken(account);
+            var deviceId = BuildRandomString(DEVICE_ID_SIZE);
+            var refreshToken = BuildRefreshToken(account.Id, deviceId);
+
+
+
+            //Need to Create Refresh Token and Store it into the Database
+            //Need to Create Device Id and Store it into the Database and the Client
+
+
 
             Logger.Log("Profile Retrieved: " + profile.ToString());
 
-            return new AuthnResponse(account, profile, token);
+            return new AuthnResponse(account, profile, token, deviceId);
         }
 
         /// <summary>
@@ -114,10 +129,38 @@ namespace PlantersAid.ServiceLayer
             return principal;
         }
 
-        private string BuildRefreshToken()
-        {
-            var randomNumber = new byte[32];
+        
 
+
+        /// <summary>
+        /// Builds a refresh token with accountId and deviceId
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <param name="deviceId"></param>
+        /// <returns></returns>
+        private RefreshToken BuildRefreshToken(int accountId, string deviceId)
+        {
+            var tokenId = BuildRandomString(REFRESH_TOKEN_SIZE);
+            var expirationTime = DateTime.UtcNow.AddDays(REFRESH_TOKEN_DURATION);
+            var token = new RefreshToken()
+            {
+                AccountId = accountId,
+                Id = tokenId,
+                ExpirationDate = expirationTime,
+                DeviceId = deviceId
+            };
+
+            return token;
+        }
+
+        private string BuildRandomString(int bytes)
+        {
+            var randomNumber = new byte[bytes];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomNumber);
+                return Convert.ToBase64String(randomNumber);
+            }
         }
 
         public int RetrieveId(string email)

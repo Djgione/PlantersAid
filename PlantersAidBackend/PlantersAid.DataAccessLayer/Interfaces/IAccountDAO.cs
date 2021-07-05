@@ -13,7 +13,7 @@ namespace PlantersAid.DataAccessLayer.Interfaces
         /// Method for Retrieving Account from DB
         /// </summary>
         /// <returns></returns>
-        public Account GetAccount(int identifier);
+        //public Account GetAccount(int identifier);
 
         /// <summary>
         /// Method for Deleting Account for DB
