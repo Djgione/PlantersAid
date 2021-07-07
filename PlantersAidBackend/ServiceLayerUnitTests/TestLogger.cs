@@ -16,7 +16,7 @@ namespace ServiceLayerUnitTests
         public void TestLogCreation_Success()
         {
             FlatFileLogger log = new FlatFileLogger();
-            log.Log("f");
+            Task.WaitAll(log.Log("f"));
             DateTime current = DateTime.UtcNow;
             var storage = Environment.GetEnvironmentVariable("plantersAidLogFiles");
 

@@ -7,18 +7,15 @@ namespace PlantersAid.ServiceLayer
 {
     public class Authorization
     {
-        private const string defaultEmail = "";
-        private readonly AuthorizationClaims _authClaims;
 
-        public Authorization(AuthorizationClaims authClaims)
+        public Authorization()
+        { }
+
+        public void Authorize(AuthzRequest request)
         {
-            _authClaims = authClaims;
+
         }
 
-        public bool Authorize()
-        {
-            throw new NotImplementedException();
-        }
-
+      
     }
 }
