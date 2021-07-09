@@ -62,7 +62,7 @@ namespace PlantersAid.ServiceLayer
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        public AuthnResponse Authenticate(AuthnRequest request)
+        public AuthnResponse Authenticate(in AuthnRequest request)
         {
             //Builds an account from the incoming request
             var account = new Account(request.Email, request.Password, RetrieveId(request.Email));

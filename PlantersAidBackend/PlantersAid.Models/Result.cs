@@ -14,5 +14,10 @@ namespace PlantersAid.Models
             Success = success;
             Message = message;
         }
+
+        public override string ToString()
+        {
+            return Success + " | " + Message;
+        }
     }
 }

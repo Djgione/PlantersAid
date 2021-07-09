@@ -32,5 +32,19 @@ namespace PlantersAid.Models
             Token = token;
             DeviceId = deviceId;
         }
+
+        public AuthnResponse(int id, string username, string firstName, string lastName, string email, string gender, 
+            DateTime dateOfBirth, string token, string deviceId)
+        {
+            Id = id;
+            Username = username;
+            FirstName = firstName;
+            LastName = lastName;
+            Email = email;
+            Gender = gender;
+            DateOfBirth = dateOfBirth;
+            Token = token;
+            DeviceId = deviceId;
+        }
     }
 }

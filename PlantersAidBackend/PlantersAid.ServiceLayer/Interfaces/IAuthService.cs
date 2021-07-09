@@ -18,6 +18,6 @@ namespace PlantersAid.ServiceLayer.Interfaces
         /// </summary>
         /// <param name="email"></param>
         /// <returns></returns>
-        AuthnResponse Authenticate(AuthnRequest request);
+        AuthnResponse Authenticate( in AuthnRequest request);
     }
 }

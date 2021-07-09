@@ -22,11 +22,14 @@ namespace PlantersAid.ServiceLayer
         {
             try
             {
-                return DataAccess.UpdateProfile(id, profile);
+                var result = DataAccess.UpdateProfile(id, profile);
+                Logger.Log(result.ToString());
+                return result;
             }
-            catch(Exception)
+            catch(Exception ex)
             {
-                throw;
+                Logger.Log(ex.ToString());
+                return new Result(false, "Profile failed to update | " + ex.ToString());
             }
         }
 
@@ -34,11 +37,14 @@ namespace PlantersAid.ServiceLayer
         {
             try
             {
-                return DataAccess.UpdateProfilePicture(id, image);
+                var result =  DataAccess.UpdateProfilePicture(id, image);
+                Logger.Log(result.ToString());
+                return result;
             }
-            catch (Exception)
-            { 
-                throw;
+            catch (Exception ex)
+            {
+                Logger.Log(ex.ToString());
+                return new Result(false, "Profile picture failed to update | " + ex.ToString());
             }
           
         }
@@ -47,11 +53,14 @@ namespace PlantersAid.ServiceLayer
         {
             try
             {
-                return DataAccess.RetrieveProfile(id);
+                var result = DataAccess.RetrieveProfile(id);
+                Logger.Log("Profile Retrieved : " + result.ToString());
+                return result;
             }
-            catch(Exception)
+            catch(Exception ex)
             {
-                throw;
+                Logger.Log(ex.ToString());
+                return null;
             }
         }
 
@@ -60,11 +69,14 @@ namespace PlantersAid.ServiceLayer
         {
             try
             {
-                return DataAccess.RetrieveProfilePicture(id);
+                var result = DataAccess.RetrieveProfilePicture(id);
+                Logger.Log("Profile Picture retrieved fromm Database for User: " + id);
+                return result;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                Logger.Log(ex.ToString());
+                return null;
             }
         }
 
