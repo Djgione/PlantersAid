@@ -114,7 +114,7 @@ namespace PlantersAid.DataAccessLayer
         }
 
         /// <summary>
-        /// Deletes a collection of Id's, Cascade Delete Handled by SQL
+        /// Deletes a collection of RefreshTokenId's, Cascade Delete Handled by SQL
         /// </summary>
         /// <param name="ids"></param>
         /// <returns></returns>
@@ -528,11 +528,213 @@ namespace PlantersAid.DataAccessLayer
                 }
                 catch(Exception ex)
                 {
-                    Console.WriteLine("Failed to Retrieve Id");
+                    Console.WriteLine("Failed to Retrieve RefreshTokenId");
                     Console.WriteLine(ex.ToString());
                     return -1;
                 }
 
+            }
+        }
+
+        /// <summary>
+        /// Retrieving refresh token from Table
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <param name="deviceId"></param>
+        /// <returns></returns>
+        public RefreshToken RetrieveRefreshToken(int accountId, string deviceId)
+        {
+            using (var connection = new SqlConnection(_accountsUsersConnectionString))
+            {
+                connection.Open();
+
+                SqlCommand command = connection.CreateCommand();
+                command.Connection = connection;
+
+                try
+                {
+                    var refreshToken = new RefreshToken();
+
+                    command.CommandText = @"SELECT " + RefreshTokenTable.RESFRESHTOKEN_COLUMN_NAME + @", " + RefreshTokenTable.EXPIRATIONDATE_COLUMN_NAME + 
+                        @" FROM " + RefreshTokenTable.REFRESH_TOKEN_TABLE_NAME + @" WHERE accountId = @accountId 
+                        AND deviceId = @deviceId";
+                    command.Parameters.AddWithValue("@accountId", accountId);
+                    command.Parameters.AddWithValue("@deviceId", deviceId);
+
+
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while(reader.Read())
+                        {
+                            refreshToken.AccountId = accountId;
+                            refreshToken.DeviceId = deviceId;
+                            refreshToken.RefreshTokenId = reader[RefreshTokenTable.RESFRESHTOKEN_COLUMN_NAME].ToString();
+                            refreshToken.ExpirationDate = Convert.ToDateTime(reader[RefreshTokenTable.EXPIRATIONDATE_COLUMN_NAME].ToString());
+                        }
+                    }
+
+                    return refreshToken;
+                }
+                catch (Exception)
+                {
+                    
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Used to update a single refresh token located at specific account id / device id
+        /// </summary>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        public Result UpdateRefreshToken(RefreshToken token)
+        {
+
+            Result result;
+
+            using (var connection = new SqlConnection(_accountsUsersConnectionString))
+            {
+                connection.Open();
+
+                SqlCommand command = connection.CreateCommand();
+                SqlTransaction transaction = connection.BeginTransaction();
+                command.Transaction = transaction;
+
+                try
+                {
+                    command.CommandText = @"UPDATE " + RefreshTokenTable.REFRESH_TOKEN_TABLE_NAME + @" SET " +
+                        RefreshTokenTable.RESFRESHTOKEN_COLUMN_NAME + @" = @refreshTokenId, " + RefreshTokenTable.EXPIRATIONDATE_COLUMN_NAME +
+                        @" = @expirationDate WHERE " + RefreshTokenTable.ACCOUNTID_COLUMN_NAME + @" = @accountId AND " + RefreshTokenTable.DEVICEID_COLUMN_NAME +
+                        @" = @deviceId";
+
+                    command.Parameters.AddWithValue("@refreshTokenId", token.RefreshTokenId);
+                    command.Parameters.AddWithValue("@expirationDate", token.ExpirationDate);
+                    command.Parameters.AddWithValue("@accountId", token.AccountId);
+                    command.Parameters.AddWithValue("@deviceId", token.DeviceId);
+
+
+                    command.ExecuteNonQuery();
+                    transaction.Commit();
+                    result = new Result(true, "Refresh Token Successfully Updated");
+                }
+                catch (Exception outer)
+                {
+
+                    try
+                    {
+                        transaction.Rollback();
+                        result = new Result(false, outer.ToString());
+
+                    }
+                    catch (Exception inner)
+                    {
+                        result = new Result(false, outer.ToString() + " | " + inner.ToString());
+                    }
+                }
+
+                return result;
+            }
+            
+        }
+
+        public Result AddRefreshToken(RefreshToken token)
+        {
+            Result result;
+
+            using (var connection = new SqlConnection(_accountsUsersConnectionString))
+            {
+                connection.Open();
+
+                SqlCommand command = connection.CreateCommand();
+                SqlTransaction transaction = connection.BeginTransaction();
+                command.Transaction = transaction;
+
+                try
+                {
+                    command.CommandText = @"INSERT INTO " + RefreshTokenTable.REFRESH_TOKEN_TABLE_NAME + @" (" +
+                        RefreshTokenTable.ACCOUNTID_COLUMN_NAME + @", " + RefreshTokenTable.DEVICEID_COLUMN_NAME + @", " +
+                        RefreshTokenTable.RESFRESHTOKEN_COLUMN_NAME + @", " + RefreshTokenTable.EXPIRATIONDATE_COLUMN_NAME +
+                        @") VALUES (@accountId, @deviceId, @refreshTokenId, @expirationDate)";
+
+                    command.Parameters.AddWithValue("@refreshTokenId", token.RefreshTokenId);
+                    command.Parameters.AddWithValue("@expirationDate", token.ExpirationDate);
+                    command.Parameters.AddWithValue("@accountId", token.AccountId);
+                    command.Parameters.AddWithValue("@deviceId", token.DeviceId);
+
+
+                    command.ExecuteNonQuery();
+                    transaction.Commit();
+                    result = new Result(true, "Refresh Token Successfully Added");
+                }
+                catch (Exception outer)
+                {
+
+                    try
+                    {
+                        transaction.Rollback();
+                        result = new Result(false, outer.ToString());
+
+                    }
+                    catch (Exception inner)
+                    {
+                        result = new Result(false, outer.ToString() + " | " + inner.ToString());
+                    }
+                }
+
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Used to clear all refresh tokens related to specific account, or a specific one based on Id
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <returns></returns>
+        public Result ClearRefreshToken(int accountId, string deviceId = "")
+        {
+            Result result;
+
+            using (var connection = new SqlConnection(_accountsUsersConnectionString))
+            {
+                connection.Open();
+
+                SqlCommand command = connection.CreateCommand();
+                SqlTransaction transaction = connection.BeginTransaction();
+                command.Transaction = transaction;
+
+                try
+                {
+                    command.CommandText = @"DELETE * FROM " + RefreshTokenTable.REFRESH_TOKEN_TABLE_NAME +
+                        @" WHERE " + RefreshTokenTable.ACCOUNTID_COLUMN_NAME + @" = @accountId";
+                    command.Parameters.AddWithValue("@accountId", accountId);
+
+                    if(!String.IsNullOrEmpty(deviceId))
+                    {
+                        command.CommandText += @" AND " + RefreshTokenTable.DEVICEID_COLUMN_NAME + @" = @deviceId";
+                        command.Parameters.AddWithValue("@deviceId", deviceId);
+                    }
+
+                    command.ExecuteNonQuery();
+                    transaction.Commit();
+                    result = new Result(true, "Refresh Token(s) Cleared");
+                }
+                catch (Exception outer)
+                {
+                    try
+                    {
+                        transaction.Rollback();
+                        result = new Result(false, outer.ToString());
+                        
+                    }
+                    catch (Exception inner)
+                    {
+                        result = new Result(false, outer.ToString() + " | " + inner.ToString());   
+                    }
+                }
+
+                return result;
             }
         }
 

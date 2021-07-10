@@ -10,7 +10,7 @@ using PlantersAid.Models;
 
 namespace PlantersAid.ServiceLayer.Interfaces
 {
-    public interface IAuthService
+    public interface IAuthentication
     {
         /// <summary>
         /// Authenticates the AuthnRequest incoming from controller
@@ -18,6 +18,6 @@ namespace PlantersAid.ServiceLayer.Interfaces
         /// </summary>
         /// <param name="email"></param>
         /// <returns></returns>
-        AuthnResponse Authenticate( in AuthnRequest request);
+        string Authenticate( in AuthnRequest request);
     }
 }

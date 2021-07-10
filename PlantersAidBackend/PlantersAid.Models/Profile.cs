@@ -12,6 +12,7 @@ namespace PlantersAid.Models
         public string LastName { get; set; }
         public DateTime DateOfBirth { get; set; }
         public string Gender { get; set; }
+        public string FullName { get { return this.FirstName + " " + this.LastName; } }
 
         public Profile(string username, string firstName, string lastName, string gender, DateTime dateOfBirth)
         {
@@ -21,6 +22,8 @@ namespace PlantersAid.Models
             DateOfBirth = dateOfBirth;
             Gender = gender;
         }
+
+      
 
         public override string ToString()
         {

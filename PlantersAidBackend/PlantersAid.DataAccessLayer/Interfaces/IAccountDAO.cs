@@ -57,5 +57,13 @@ namespace PlantersAid.DataAccessLayer.Interfaces
         public Result ClearDatabases();
 
         public int RetrieveId(string email);
+
+        public RefreshToken RetrieveRefreshToken(int accountId, string deviceId);
+
+        public Result ClearRefreshToken(int accountId, string deviceId = null);
+
+        public Result UpdateRefreshToken(RefreshToken token);
+
+        public Result AddRefreshToken(RefreshToken token);
     }
 }

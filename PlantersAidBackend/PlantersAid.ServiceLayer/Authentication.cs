@@ -13,17 +13,19 @@ using System.Security.Cryptography;
 
 namespace PlantersAid.ServiceLayer
 {
-    public class Authentication : IAuthService
+    public class Authentication : IAuthentication
     {
         // Byte sizes for refresh token and device id
         private const int REFRESH_TOKEN_SIZE = 32;
         private const int DEVICE_ID_SIZE = 20;
         private const int REFRESH_TOKEN_DURATION = 90;
+        private const int ACCESS_TOKEN_DURATION = 2;
+        private readonly string IssuerAudience = Environment.GetEnvironmentVariable("issuerAndAudiencePlantersAid");
         public IAccountDAO AccountDataAccess { get; }
         public IUserManagementDAO UserDataAccess { get; }
 
         public static readonly string ClaimsRole = "UserRole";
-        private readonly string IssuerAudience = "plantersaid.com";
+        
         
 
         public Authentication(IAccountDAO dataAccessAcc, IUserManagementDAO dataAccessUser)
@@ -35,10 +37,19 @@ namespace PlantersAid.ServiceLayer
         /// <summary>
         /// Method that creates the JwtSecurityToken utilizing the ID from the database
         /// Better than using other information from database as the ID will never change, so users can be logged in on multiple items while changing account info
+        /// 
+        /// Sid = ID from DB
+        /// Gender = Gender from profile
+        /// Name = Full Name from Profile
+        /// Email = Email from Account
+        /// DateOfBirth = DateOfBirth from Profile
+        /// NameIdentifier = Username from Profile
+        /// DeviceId = DeviceId 
+        /// 
         /// </summary>
         /// <param name="account"></param>
         /// <returns></returns>
-        private string BuildToken(Account account)
+        private string BuildAccessToken(Account account, Profile profile, string deviceId)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             //Client Secret is the key
@@ -46,11 +57,17 @@ namespace PlantersAid.ServiceLayer
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[] {
-                    new Claim(ClaimTypes.NameIdentifier, account.Id.ToString()),
+                    new Claim(ClaimTypes.Sid, account.Id.ToString()),
+                    new Claim(ClaimTypes.Gender, profile.Gender),
+                    new Claim(ClaimTypes.Name, profile.FullName),
+                    new Claim(ClaimTypes.Email, account.Email),
+                    new Claim(ClaimTypes.DateOfBirth, profile.DateOfBirth.ToString()),
+                    new Claim(ClaimTypes.NameIdentifier, profile.Username),
+                    new Claim("DeviceId", deviceId)
                 }),
                 Issuer = IssuerAudience,
                 Audience = IssuerAudience,
-                Expires = DateTime.UtcNow.AddDays(2),
+                Expires = DateTime.UtcNow.AddDays(ACCESS_TOKEN_DURATION),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
@@ -62,7 +79,7 @@ namespace PlantersAid.ServiceLayer
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        public AuthnResponse Authenticate(in AuthnRequest request)
+        public string Authenticate(in AuthnRequest request)
         {
             //Builds an account from the incoming request
             var account = new Account(request.Email, request.Password, RetrieveId(request.Email));
@@ -74,26 +91,36 @@ namespace PlantersAid.ServiceLayer
 
             if(!loginResult.Success)
             {
-                Logger.Log("Unsuccessful Login");
+                Logger.Log(loginResult.Message);
                 return null;
             }
             //If the Login Method from the AccountSqlDAO Works, use the same account that you used to start that method and combine it with a retrieved profile in order to create the AuthnResponse
             //Creates the profile, token, device id, and refresh token
-            var profile = UserDataAccess.RetrieveProfile(account.Id);
-            var token = BuildToken(account);
-            var deviceId = BuildRandomString(DEVICE_ID_SIZE);
-            var refreshToken = BuildRefreshToken(account.Id, deviceId);
+            try
+            {
+                var profile = UserDataAccess.RetrieveProfile(account.Id);
+                Logger.Log("Profile Retrieved: " + profile.ToString());
 
+                var deviceId = BuildRandomString(DEVICE_ID_SIZE);
+                Logger.Log("DeviceId Generated");
 
+                var token = BuildAccessToken(account, profile, deviceId);
+                var refreshToken = BuildRefreshToken(account.Id, deviceId);
 
-            //Need to Create Refresh Token and Store it into the Database
-            //Need to Create Device Id and Store it into the Database and the Client
-
-
-
-            Logger.Log("Profile Retrieved: " + profile.ToString());
-
-            return new AuthnResponse(account, profile, token, deviceId);
+                //Stores the Refresh Token in the Database
+                var refreshStoreResult = AccountDataAccess.AddRefreshToken(refreshToken);
+                if (refreshStoreResult.Success == false)
+                {
+                    throw new Exception(refreshStoreResult.Message);
+                }
+                Logger.Log("Refresh Token successfully stored");
+                return token;
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex.ToString());
+                return null;
+            }
         }
 
         /// <summary>
@@ -124,7 +151,7 @@ namespace PlantersAid.ServiceLayer
 
             var jwtSecurityToken = securityToken as JwtSecurityToken;
             if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha512Signature, StringComparison.InvariantCultureIgnoreCase))
-                throw new SecurityTokenException("Invalid Token");
+                throw new SecurityTokenException("Invalid AccessToken");
 
             return principal;
         }
@@ -145,7 +172,7 @@ namespace PlantersAid.ServiceLayer
             var token = new RefreshToken()
             {
                 AccountId = accountId,
-                Id = tokenId,
+                RefreshTokenId = tokenId,
                 ExpirationDate = expirationTime,
                 DeviceId = deviceId
             };

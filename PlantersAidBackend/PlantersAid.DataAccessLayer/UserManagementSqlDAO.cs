@@ -42,12 +42,12 @@ namespace PlantersAid.DataAccessLayer
                 {
                     command.CommandText = @"UPDATE " + UserTable.USER_TABLE_NAME + @" SET " + UserTable.USERNAME_COLUMN_NAME + @" = @Username, " + UserTable.FIRSTNAME_COLUMN_NAME + @" = @FirstName, " 
                         + UserTable.LASTNAME_COLUMN_NAME + @" = @LastName, " + UserTable.GENDER_COLUMN_NAME + @" = @Gender, " + UserTable.DATEOFBIRTH_COLUMN_NAME + @" = @DateOfBirth WHERE " 
-                            + AccountTable.ACCOUNT_ID_COLUMN_NAME + @" = @Id";
+                            + AccountTable.ACCOUNT_ID_COLUMN_NAME + @" = @RefreshTokenId";
                     command.Parameters.AddWithValue("@Username", profile.Username);
                     command.Parameters.AddWithValue("@FirstName", profile.FirstName);
                     command.Parameters.AddWithValue("@LastName", profile.LastName);
                     command.Parameters.AddWithValue("@Gender", profile.Gender);
-                    command.Parameters.AddWithValue("@Id", id);
+                    command.Parameters.AddWithValue("@RefreshTokenId", id);
 
                     command.ExecuteNonQuery();
                     transaction.Commit();
