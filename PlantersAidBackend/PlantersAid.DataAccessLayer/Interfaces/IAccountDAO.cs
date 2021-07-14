@@ -58,12 +58,58 @@ namespace PlantersAid.DataAccessLayer.Interfaces
 
         public int RetrieveId(string email);
 
+        /// <summary>
+        /// Retrieves the refresh token based on account and device id
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <param name="deviceId"></param>
+        /// <returns></returns>
         public RefreshToken RetrieveRefreshToken(int accountId, string deviceId);
 
+        /// <summary>
+        /// Deletes an existing refresh token
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <param name="deviceId"></param>
+        /// <returns></returns>
         public Result ClearRefreshToken(int accountId, string deviceId = null);
+        /// <summary>
+        /// Updates an already Existing Refresh Token
+        /// </summary>
+        /// <param name="token"></param>
+        /// <returns></returns>
 
         public Result UpdateRefreshToken(RefreshToken token);
 
+        /// <summary>
+        /// Creates a brand new refresh token
+        /// </summary>
+        /// <param name="token"></param>
+        /// <returns></returns>
+
         public Result AddRefreshToken(RefreshToken token);
+
+        /// <summary>
+        /// Retrieves all Permissions for the accountId
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <returns></returns>
+        public IEnumerable<Permission> RetrievePermissions(int accountId);
+
+        /// <summary>
+        /// Removes all permissions from the account based on id
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <param name="permissions"></param>
+        /// <returns></returns>
+        public Result RemovePermissions(int accountId, ref IEnumerable<Permission> permissions);
+
+        /// <summary>
+        /// Adds permissions to account based on ID
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <param name="permissions"></param>
+        /// <returns></returns>
+        public Result AddPermissions(int accountId, ref IEnumerable<Permission> permissions);
     }
 }

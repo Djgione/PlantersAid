@@ -178,10 +178,49 @@ namespace PlantersAid.ServiceLayer
 
         public IEnumerable<Permission> RetrievePermissions(int accountId)
         {
-
+            try
+            {
+                var permissions = DataAccess.RetrievePermissions(accountId);
+                Logger.Log("Permissions Successfully Retrieved");
+                return permissions;
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex.ToString());
+                return null;
+            }
         }
 
 
+        public Result RemovePermissions(int accountId, ref IEnumerable<Permission> permissions)
+        {
+            try
+            {
+                var result = DataAccess.RemovePermissions(accountId, ref permissions);
+                Logger.Log(result.ToString());
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex.ToString());
+                return new Result(false, ex.ToString());
+            }
+        }
+
+        public Result AddPermissions(int accountId, ref IEnumerable<Permission> permissions)
+        {
+            try
+            {
+                var result = DataAccess.AddPermissions(accountId, ref permissions);
+                Logger.Log(result.ToString());
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex.ToString());
+                return new Result(false, ex.ToString());
+            }
+        }
 
 
         public int RetrieveId(string email)

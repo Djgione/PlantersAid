@@ -10,6 +10,7 @@ using PlantersAid.DataAccessLayer.SQLTableColumns;
 using System.Linq;
 
 
+
 namespace PlantersAid.DataAccessLayer
 {
     public class AccountSqlDAO : IAccountDAO
@@ -17,12 +18,13 @@ namespace PlantersAid.DataAccessLayer
         private readonly string _accountsUsersConnectionString;
         private readonly string _restrictedInfoConnectionString;
         private readonly string _restrictedTable = "[PlantersAidRestrictedInfo].[dbo].[passwordinfo]";
+       // private readonly DatabaseDataContext accountDb;
         public AccountSqlDAO()
         {
             _accountsUsersConnectionString = Environment.GetEnvironmentVariable("plantersAidAccountUsersConnectionString");
             _restrictedInfoConnectionString = Environment.GetEnvironmentVariable("plantersAidRestrictedInfoConnectionString");
 
-            var accountdb = new LinqToSQLDataContext(_accountsUsersConnectionString);
+           //var accountDb = new DatabaseDataContext(_accountsUsersConnectionString);
         }
 
         /// <summary>
@@ -117,22 +119,7 @@ namespace PlantersAid.DataAccessLayer
 
         }
 
-        /// <summary>
-        /// Retrieves all permissions for an account based on ID
-        /// </summary>
-        /// <param name="accountId"></param>
-        /// <returns></returns>
-        public IEnumerable<Permission> RetrievePermissions(int accountId)
-        {
-
-            IEnumerable<Permission> permissions = new List<Permission>();
-            using (var connection = new SqlConnection(_accountsUsersConnectionString))
-            {
-                connection.Open();
-                SqlCommand command = connection.CreateCommand();
-
-            }
-        }
+     
 
         /// <summary>
         /// Deletes a collection of RefreshTokenId's, Cascade Delete Handled by SQL
@@ -838,5 +825,134 @@ namespace PlantersAid.DataAccessLayer
             return result;
         }
 
+        public IEnumerable<Permission> RetrievePermissions(int accountId)
+        {
+            List<Permission> permissions;
+            using (var connection = new SqlConnection(_accountsUsersConnectionString))
+            {
+                SqlCommand command = connection.CreateCommand();
+                command.Connection = connection;
+
+                try
+                {
+                    connection.Open();
+                    command.CommandText = @"SELECT " + PermissionAccountMappingTable.PERMISSION_ID_NAME + @" FROM " + PermissionAccountMappingTable.PERMISSION_ACCOUNT_MAPPING_TABLE_NAME +
+                        @" WHERE " + PermissionAccountMappingTable.ACCOUNT_ID_NAME + @" = @accountId";
+                    command.Parameters.AddWithValue("@accountId", accountId);
+                    permissions = new List<Permission>();
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                permissions.Add((Permission)reader.GetInt32(i));
+                            }
+                        }
+                    }
+
+                    return permissions;
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+        }
+
+        public Result RemovePermissions(int accountId, ref IEnumerable<Permission> permissions)
+        {
+            Result result;
+            using (var connection = new SqlConnection(_accountsUsersConnectionString))
+            {
+                SqlCommand command = connection.CreateCommand();
+                SqlTransaction transaction = connection.BeginTransaction();
+                command.Transaction = transaction;
+                command.Connection = connection;
+
+                var permissionCSV = PermissionToCSV(permissions);
+
+                try
+                {
+                    command.CommandText = @"DELETE FROM " + PermissionAccountMappingTable.PERMISSION_ACCOUNT_MAPPING_TABLE_NAME + @" WHERE " + PermissionAccountMappingTable.ACCOUNT_ID_NAME + @" = @accountId AND " +
+                        PermissionAccountMappingTable.PERMISSION_ID_NAME + @" IN (@permissions)";
+                    command.Parameters.AddWithValue("@accountId", accountId);
+                    command.Parameters.AddWithValue("@permissions", permissionCSV);
+                    command.ExecuteNonQuery();
+
+                    result = new Result(true, "Permissions Removed Successfully");
+                    
+                }
+                catch (Exception ex)
+                {
+                    result = new Result(false, ex.ToString());
+                    
+                }
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Turns List of Permissions into a CSV String
+        /// </summary>
+        /// <param name="list"></param>
+        /// <returns></returns>
+        private static String PermissionToCSV(IEnumerable<Permission> list)
+        {
+            var permissionCSV = "";
+
+            using (var permissionEnum = list.GetEnumerator())
+            {
+                while (permissionEnum.MoveNext())
+                {
+                    permissionCSV += (int)permissionEnum.Current + ", ";
+                }
+            }
+
+            permissionCSV = permissionCSV.Substring(0, permissionCSV.Length - 2);
+
+            return permissionCSV;
+        }
+
+        private static String PermissionAccountToCSV(int accountId, IEnumerable<Permission> list)
+        {
+            var result = "";
+            using (var enumerator = list.GetEnumerator())
+            {
+                while(enumerator.MoveNext())
+                {
+                    result += "(" + accountId + ", " + (int)enumerator.Current + "), ";
+                }
+            }
+
+            return result.Substring(0, result.Length - 2);
+            
+        }
+
+        public Result AddPermissions(int accountId, ref IEnumerable<Permission> permissions)
+        {
+            Result result;
+            using(var connection = new SqlConnection(_accountsUsersConnectionString))
+            {
+                var command = connection.CreateCommand();
+                var transaction = connection.BeginTransaction();
+                command.Transaction = transaction;
+                command.Connection = connection;
+                var valuesString = PermissionAccountToCSV(accountId, permissions);
+
+                try
+                {
+                    command.CommandText = @"INSERT INTO " + PermissionAccountMappingTable.PERMISSION_ACCOUNT_MAPPING_TABLE_NAME + @"( " + PermissionAccountMappingTable.ACCOUNT_ID_NAME + @", " + PermissionAccountMappingTable.PERMISSION_ID_NAME + @") VALUES " + valuesString;
+                    command.Parameters.AddWithValue("@accountId", accountId);
+                    command.ExecuteNonQuery();
+                    result = new Result(true, "Permissions added Successfully");
+                }
+                catch (Exception ex)
+                {
+                    result = new Result(false, ex.ToString());
+                }
+                return result;
+            }
+        }
     }
 }

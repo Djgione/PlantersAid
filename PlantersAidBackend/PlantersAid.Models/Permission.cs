@@ -49,11 +49,10 @@ namespace PlantersAid.Models
         RemovePlantPicture = 23,
         [Display(GroupName = "Garden", Name = "AddPlant", Description = "Adds a plant (that exists in the database) to your Personal Garden")]
         AddPlant = 24,
-     
-        
-       
-        
-        
+
        
     }
+    
+
+
 }

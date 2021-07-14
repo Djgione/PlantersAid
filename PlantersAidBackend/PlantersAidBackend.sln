@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlantersAid.Models", "Plant
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceLayerUnitTests", "ServiceLayerUnitTests\ServiceLayerUnitTests.csproj", "{9B87999A-A603-4C32-ABEB-3FE0A2603072}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlantersAid.ControllerLayer", "ControllerLayer\PlantersAid.ControllerLayer.csproj", "{98F761AA-6488-41B8-B670-41989AC00E5E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlantersAid.ControllerLayer", "ControllerLayer\PlantersAid.ControllerLayer.csproj", "{98F761AA-6488-41B8-B670-41989AC00E5E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
