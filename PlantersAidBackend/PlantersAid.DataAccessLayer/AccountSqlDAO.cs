@@ -7,6 +7,8 @@ using Microsoft.Data.SqlClient;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using PlantersAid.DataAccessLayer.SQLTableColumns;
+using System.Linq;
+
 
 namespace PlantersAid.DataAccessLayer
 {
@@ -19,6 +21,8 @@ namespace PlantersAid.DataAccessLayer
         {
             _accountsUsersConnectionString = Environment.GetEnvironmentVariable("plantersAidAccountUsersConnectionString");
             _restrictedInfoConnectionString = Environment.GetEnvironmentVariable("plantersAidRestrictedInfoConnectionString");
+
+            var accountdb = new LinqToSQLDataContext(_accountsUsersConnectionString);
         }
 
         /// <summary>
@@ -111,6 +115,23 @@ namespace PlantersAid.DataAccessLayer
             result = new Result(true, build.ToString());
             return result;
 
+        }
+
+        /// <summary>
+        /// Retrieves all permissions for an account based on ID
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <returns></returns>
+        public IEnumerable<Permission> RetrievePermissions(int accountId)
+        {
+
+            IEnumerable<Permission> permissions = new List<Permission>();
+            using (var connection = new SqlConnection(_accountsUsersConnectionString))
+            {
+                connection.Open();
+                SqlCommand command = connection.CreateCommand();
+
+            }
         }
 
         /// <summary>

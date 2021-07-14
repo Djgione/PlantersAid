@@ -176,6 +176,11 @@ namespace PlantersAid.ServiceLayer
 
         }
 
+        public IEnumerable<Permission> RetrievePermissions(int accountId)
+        {
+
+        }
+
 
 
 
