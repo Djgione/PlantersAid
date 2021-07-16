@@ -9,6 +9,7 @@ namespace PlantersAid.Models
 {
     public enum Permission
     {
+
         [Display(GroupName = "Account", Name = "DeleteAccount", Description = "Can Delete Their Own Account")]
         DeleteAccount = 10,
         [Display(GroupName = "Account", Name = "DisableAccount", Description = "Deactivate Account but Save Data")]
@@ -19,12 +20,17 @@ namespace PlantersAid.Models
         EditProfilePicture = 13,
         [Display(GroupName = "Account", Name = "EnableAccount", Description = "Enabling a Disabled Account to Reactivate it")]
         EnableAccount = 14,
-        
+
         [Display(GroupName = "Search", Name = "SearchPlant", Description = "Searches for a Plant in the Database")]
         SearchPlant = 1,
         [Display(GroupName = "Search", Name = "DisplayResult", Description = "Displays the results of a search")]
         DisplayResult = 2,
-        
+
+        [Display(GroupName = "Administration", Name = "Admin", Description = "Admin Power : Allow for editing of other people's posts and information")]
+        Admin = 100,
+        [Display(GroupName = "Administration", Name = "EditPermissions", Description = "Admin Power: Allow for editing of other people's permissions")]
+        EditPermissions = 101,
+
 
         None = 0,
 
@@ -38,7 +44,7 @@ namespace PlantersAid.Models
         UnblockPerson = 33,
         [Display(GroupName = "Social", Name = "ViewProfile", Description = "Views a Person's Profile")]
         ViewProfile = 34,
-    
+
         [Display(GroupName = "Garden", Name = "AddCustomPlant", Description = "Adds a Plant (that does not exist in the database currently) to your Personal Garden")]
         AddCustomPlant = 20,
         [Display(GroupName = "Garden", Name = "RemovePlant", Description = "Removes a Plant from your Personal Garden")]
@@ -50,9 +56,12 @@ namespace PlantersAid.Models
         [Display(GroupName = "Garden", Name = "AddPlant", Description = "Adds a plant (that exists in the database) to your Personal Garden")]
         AddPlant = 24,
 
-       
     }
-    
+
 
 
 }
+
+    
+
+

@@ -73,16 +73,17 @@ namespace PlantersAid.ServiceLayer
 
             Logger.Log("Password Succesfully Hashed, Attempting Store");
 
-            var finalResult = DataAccess.CreateAccount(acc, salt);
+            var accountResult = DataAccess.CreateAccount(acc, salt);
 
-            if(finalResult.Success)
-            {
-                Logger.Log("Account Successfully Created");
-            }
-            else
-            {
-                Logger.Log("Account Failed to Create");
-            }
+            var accountId = RetrieveId(acc.Email);
+
+            var permissions = Roles.NewUser;
+
+            var permissionResult = DataAccess.AddPermissions(accountId, ref permissions);
+
+            var finalResult = new Result(accountResult.Success && permissionResult.Success, accountResult.Message + " | " + permissionResult.Message);
+
+            Logger.Log(finalResult.Success + " | " + finalResult.Message);
 
             return finalResult;
         }
@@ -114,9 +115,13 @@ namespace PlantersAid.ServiceLayer
 
             acc.Password = Hasher(acc.Password, salt);
 
-            var goodResult = DataAccess.ChangePassword(acc);
-            Logger.Log(goodResult.Message);
-            return goodResult;
+            var passwordResult = DataAccess.ChangePassword(acc);
+
+            var refreshTokenResult = DataAccess.ClearRefreshToken(acc.Id);
+
+            var combinedResult = new Result(passwordResult.Success && refreshTokenResult.Success, passwordResult.Message + " | " + refreshTokenResult.Message);
+
+            return combinedResult;
         }
 
         private static string Hasher(string password, byte[] salt)
@@ -176,7 +181,7 @@ namespace PlantersAid.ServiceLayer
 
         }
 
-        public IEnumerable<Permission> RetrievePermissions(int accountId)
+        private IEnumerable<Permission> RetrievePermissions(int accountId)
         {
             try
             {

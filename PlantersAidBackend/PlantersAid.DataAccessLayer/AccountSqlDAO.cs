@@ -751,6 +751,11 @@ namespace PlantersAid.DataAccessLayer
             return "\'" + str + "\'";
         }
 
+
+        /// <summary>
+        /// Deletes Everything Within the Databases for a Full Clear
+        /// </summary>
+        /// <returns></returns>
         public Result ClearDatabases()
         {
             Result result;
@@ -824,7 +829,13 @@ namespace PlantersAid.DataAccessLayer
             result = new Result(true, build.ToString());
             return result;
         }
+        
 
+        /// <summary>
+        /// Retrieves all Permissions relating to the AccountId within the PermissionAccountMapping Table
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <returns></returns>
         public IEnumerable<Permission> RetrievePermissions(int accountId)
         {
             List<Permission> permissions;
@@ -860,6 +871,13 @@ namespace PlantersAid.DataAccessLayer
             }
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <param name="permissions"></param>
+        /// <returns></returns>
         public Result RemovePermissions(int accountId, ref IEnumerable<Permission> permissions)
         {
             Result result;

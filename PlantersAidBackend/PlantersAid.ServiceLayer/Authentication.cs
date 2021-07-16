@@ -49,8 +49,14 @@ namespace PlantersAid.ServiceLayer
         /// </summary>
         /// <param name="account"></param>
         /// <returns></returns>
-        private string BuildAccessToken(Account account, Profile profile, string deviceId)
+        private string BuildAccessToken(Account account, string deviceId, IEnumerable<int> permissionIds)
         {
+            var permissionClaims = new List<Claim>();
+            foreach(int id in permissionIds)
+            {
+                permissionClaims.Add(new Claim("Permission", id.ToString()));
+            }
+
             var tokenHandler = new JwtSecurityTokenHandler();
             //Client Secret is the key
             var key = Encoding.ASCII.GetBytes(Environment.GetEnvironmentVariable("loginSymmetricSecurityKey"));
@@ -58,11 +64,6 @@ namespace PlantersAid.ServiceLayer
             {
                 Subject = new ClaimsIdentity(new[] {
                     new Claim(ClaimTypes.Sid, account.Id.ToString()),
-                    new Claim(ClaimTypes.Gender, profile.Gender),
-                    new Claim(ClaimTypes.Name, profile.FullName),
-                    new Claim(ClaimTypes.Email, account.Email),
-                    new Claim(ClaimTypes.DateOfBirth, profile.DateOfBirth.ToString()),
-                    new Claim(ClaimTypes.NameIdentifier, profile.Username),
                     new Claim("DeviceId", deviceId)
                 }),
                 Issuer = IssuerAudience,
@@ -70,6 +71,10 @@ namespace PlantersAid.ServiceLayer
                 Expires = DateTime.UtcNow.AddDays(ACCESS_TOKEN_DURATION),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha512Signature)
             };
+
+            //Adding Permissions to the Subject Claims
+            tokenDescriptor.Subject.AddClaims(permissionClaims);
+
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
         }
@@ -79,10 +84,10 @@ namespace PlantersAid.ServiceLayer
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        public string Authenticate(in AuthnRequest request)
+        public AuthnResponse Authenticate(in AuthnRequest request)
         {
             //Builds an account from the incoming request
-            var account = new Account(request.Email, request.Password, RetrieveId(request.Email));
+            var account = new Account(request.Email, request.Password, AccountDataAccess.RetrieveId(request.Email));
 
             Logger.Log("Account Built: " + account.ToString());
 
@@ -104,7 +109,10 @@ namespace PlantersAid.ServiceLayer
                 var deviceId = BuildRandomString(DEVICE_ID_SIZE);
                 Logger.Log("DeviceId Generated");
 
-                var token = BuildAccessToken(account, profile, deviceId);
+                var permissions = AccountDataAccess.RetrievePermissions(account.Id);
+                var permissionIds = Roles.GetIds(permissions);
+
+                var token = BuildAccessToken(account, deviceId, permissionIds);
                 var refreshToken = BuildRefreshToken(account.Id, deviceId);
 
                 //Stores the Refresh Token in the Database
@@ -114,7 +122,10 @@ namespace PlantersAid.ServiceLayer
                     throw new Exception(refreshStoreResult.Message);
                 }
                 Logger.Log("Refresh Token successfully stored");
-                return token;
+
+                var response = new AuthnResponse(account, profile, token);
+
+                return response;
             }
             catch (Exception ex)
             {
@@ -122,41 +133,6 @@ namespace PlantersAid.ServiceLayer
                 return null;
             }
         }
-
-        /// <summary>
-        /// Retrieves principal from expired token and returns it
-        /// Can throw SecurityTokenException
-        /// </summary>
-        /// <param name="token"></param>
-        /// <returns></returns>
-        private ClaimsPrincipal RetrievePrincipalFromExpiredToken(string token) 
-        {
-            ///Creates a TokenValidationParameters that checks for valid audience, issuer, issuer signing key, but for an invalid lifetime
-            ///Wants an expired token with all other valid parameters
-            var tokenValidationParams = new TokenValidationParameters
-            {
-                ValidateAudience = true,
-                ValidateIssuer = true,
-                ValidIssuer = IssuerAudience,
-                ValidAudience = IssuerAudience,
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Environment.GetEnvironmentVariable("loginSymmetricSecurityKey"))),
-                ValidateLifetime = false
-            };
-
-            ///Creates a token handler that will validate the token for these parameters and output a security token with the same information
-            var tokenHandler = new JwtSecurityTokenHandler();
-            SecurityToken securityToken;
-                var principal = tokenHandler.ValidateToken(token, tokenValidationParams, out securityToken);
-
-            var jwtSecurityToken = securityToken as JwtSecurityToken;
-            if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha512Signature, StringComparison.InvariantCultureIgnoreCase))
-                throw new SecurityTokenException("Invalid AccessToken");
-
-            return principal;
-        }
-
-        
 
 
         /// <summary>
@@ -180,6 +156,12 @@ namespace PlantersAid.ServiceLayer
             return token;
         }
 
+
+        /// <summary>
+        /// Builds a random string [bytes] length 
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
         private string BuildRandomString(int bytes)
         {
             var randomNumber = new byte[bytes];
@@ -190,9 +172,5 @@ namespace PlantersAid.ServiceLayer
             }
         }
 
-        public int RetrieveId(string email)
-        {
-            return AccountDataAccess.RetrieveId(email);
-        }
     }
 }
